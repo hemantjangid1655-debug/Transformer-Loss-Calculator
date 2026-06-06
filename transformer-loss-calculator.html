@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transformer Loss Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0a0f2e;
+    --navy2: #0d1540;
+    --navy3: #111b52;
+    --blue-mid: #1a2a7a;
+    --blue-acc: #1e3fa8;
+    --blue-bright: #2563eb;
+    --blue-light: #3b82f6;
+    --cyan: #06b6d4;
+    --cyan-light: #67e8f9;
+    --white: #ffffff;
+    --white-80: rgba(255,255,255,0.80);
+    --white-60: rgba(255,255,255,0.60);
+    --white-30: rgba(255,255,255,0.30);
+    --white-10: rgba(255,255,255,0.10);
+    --white-05: rgba(255,255,255,0.05);
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --border: rgba(255,255,255,0.12);
+    --border-acc: rgba(99,179,255,0.35);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(37,99,235,0.25) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 40% at 90% 80%, rgba(6,182,212,0.12) 0%, transparent 60%);
+  }
+
+  header {
+    background: rgba(13,21,64,0.95);
+    border-bottom: 1px solid var(--border-acc);
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+
+  .header-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--blue-bright), var(--cyan));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .logo-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--white);
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--cyan-light);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  .badge {
+    background: rgba(6,182,212,0.15);
+    border: 1px solid rgba(6,182,212,0.4);
+    color: var(--cyan-light);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 999px;
+  }
+
+  main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem 4rem;
+  }
+
+  .page-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .page-sub {
+    font-size: 15px;
+    color: var(--white-60);
+    margin-bottom: 2rem;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 900px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr !important; }
+    .grid-4 { grid-template-columns: 1fr 1fr !important; }
+  }
+  @media (max-width: 540px) {
+    .grid-3, .grid-4 { grid-template-columns: 1fr !important; }
+    main { padding: 1.5rem 1rem 3rem; }
+    .page-title { font-size: 20px; }
+  }
+
+  .card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: var(--border-acc); }
+
+  .card-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--cyan-light);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title::before {
+    content: '';
+    width: 3px; height: 14px;
+    background: linear-gradient(to bottom, var(--blue-bright), var(--cyan));
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .field-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .field.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--white-60);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  input[type="number"], input[type="text"], select {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 9px 12px;
+    transition: border-color 0.2s, background 0.2s;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--blue-light);
+    background: rgba(255,255,255,0.09);
+  }
+
+  select option { background: #111b52; color: #fff; }
+
+  .unit-tag {
+    position: absolute;
+    right: 10px;
+    font-size: 11px;
+    color: var(--white-60);
+    font-weight: 500;
+    pointer-events: none;
+  }
+
+  input[type="number"].has-unit { padding-right: 44px; }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1.5rem 0;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.18s;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--blue-bright), var(--blue-acc));
+    color: var(--white);
+    width: 100%;
+    font-size: 15px;
+    padding: 14px;
+  }
+
+  .btn-primary:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); filter: brightness(0.97); }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border-acc);
+    color: var(--cyan-light);
+  }
+
+  .btn-outline:hover { background: rgba(6,182,212,0.1); }
+
+  .results-section {
+    margin-top: 2rem;
+    display: none;
+  }
+
+  .results-section.show { display: block; }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+
+  .results-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: 0.5px;
+  }
+
+  .status-pill {
+    padding: 4px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .status-pass {
+    background: rgba(34,197,94,0.15);
+    border: 1px solid rgba(34,197,94,0.4);
+    color: #86efac;
+  }
+
+  .status-review {
+    background: rgba(245,158,11,0.15);
+    border: 1px solid rgba(245,158,11,0.4);
+    color: #fcd34d;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 1.25rem;
+  }
+
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 1.25rem;
+  }
+
+  .metric-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+    transition: border-color 0.2s;
+  }
+
+  .metric-card:hover { border-color: var(--border-acc); }
+
+  .metric-card.accent-cyan { border-color: rgba(6,182,212,0.35); }
+  .metric-card.accent-blue { border-color: rgba(37,99,235,0.45); }
+  .metric-card.accent-green { border-color: rgba(34,197,94,0.35); }
+  .metric-card.accent-amber { border-color: rgba(245,158,11,0.35); }
+
+  .metric-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--white-60);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .metric-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: 0.3px;
+    line-height: 1.2;
+  }
+
+  .metric-unit {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--white-60);
+    margin-left: 3px;
+  }
+
+  .metric-card.accent-cyan .metric-value { color: var(--cyan-light); }
+  .metric-card.accent-green .metric-value { color: #86efac; }
+  .metric-card.accent-amber .metric-value { color: #fcd34d; }
+  .metric-card.accent-blue .metric-value { color: #93c5fd; }
+
+  .result-table-wrap {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+
+  .result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  .result-table thead tr {
+    background: rgba(255,255,255,0.06);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .result-table th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--white-60);
+  }
+
+  .result-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--white-80);
+  }
+
+  .result-table tr:last-child td { border-bottom: none; }
+
+  .result-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+  .td-val {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white);
+    text-align: right;
+  }
+
+  .td-unit {
+    font-size: 12px;
+    color: var(--white-50);
+    font-weight: 400;
+    min-width: 40px;
+  }
+
+  .section-sep {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--cyan-light);
+    padding: 8px 14px 4px;
+    background: rgba(6,182,212,0.06);
+    border-bottom: 1px solid rgba(6,182,212,0.12);
+  }
+
+  .impedance-highlight {
+    background: linear-gradient(90deg, rgba(37,99,235,0.18), rgba(6,182,212,0.1));
+    border: 1px solid rgba(37,99,235,0.4);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 1.25rem;
+  }
+
+  .imp-info { }
+  .imp-label {
+    font-size: 12px;
+    color: var(--white-60);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .imp-val {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--cyan-light);
+    letter-spacing: 1px;
+  }
+  .imp-desc {
+    font-size: 13px;
+    color: var(--white-60);
+    margin-top: 2px;
+  }
+
+  .imp-breakdown {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .imp-item { text-align: center; }
+  .imp-item-label {
+    font-size: 11px;
+    color: var(--white-60);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .imp-item-val {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #93c5fd;
+    margin-top: 2px;
+  }
+
+  .print-btn {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+    gap: 10px;
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--white-30);
+    letter-spacing: 0.3px;
+  }
+
+  @media print {
+    body { background: white; color: black; }
+    header, .btn, .print-btn, footer { display: none !important; }
+    .card, .metric-card, .result-table-wrap, .impedance-highlight {
+      border: 1px solid #ccc !important;
+      background: white !important;
+      color: black !important;
+    }
+    * { color: black !important; }
+  }
+
+  .fade-in { animation: fadeIn 0.4s ease forwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  .tooltip-wrap { position: relative; display: inline-flex; align-items: center; }
+  .tooltip-icon {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--white-10);
+    border: 1px solid var(--white-30);
+    color: var(--white-60);
+    font-size: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: default;
+    margin-left: 5px;
+    font-weight: 700;
+  }
+  .tooltip-box {
+    display: none;
+    position: absolute;
+    left: 20px; top: -4px;
+    background: #0d1540;
+    border: 1px solid var(--border-acc);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: var(--white-80);
+    white-space: nowrap;
+    z-index: 10;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  }
+  .tooltip-wrap:hover .tooltip-box { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <div>
+        <div class="logo-text">TLC Pro</div>
+        <div class="logo-sub">Transformer Loss Calculator</div>
+      </div>
+    </div>
+    <span class="badge">IEEE / IS Standard</span>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">Transformer Loss Calculator</h1>
+  <p class="page-sub">Calculate winding losses, impedance, stray losses & total efficiency at rated temperature (75°C)</p>
+
+  <div class="grid-2">
+
+    <!-- LEFT COLUMN: INPUT CARDS -->
+    <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+      <!-- Nameplate Data -->
+      <div class="card">
+        <div class="card-title">Nameplate Data</div>
+        <div class="field-grid">
+          <div class="field">
+            <label>Rating (kVA)</label>
+            <div class="input-wrap">
+              <input type="number" id="kva" value="500" class="has-unit">
+              <span class="unit-tag">kVA</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Winding Material
+              <span class="tooltip-wrap">
+                <span class="tooltip-icon">?</span>
+                <span class="tooltip-box">Cu constant: 235 | Al constant: 225</span>
+              </span>
+            </label>
+            <select id="material">
+              <option value="Cu">Copper (Cu)</option>
+              <option value="Al">Aluminium (Al)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>HV Voltage (V)</label>
+            <div class="input-wrap">
+              <input type="number" id="hv_v" value="11000" class="has-unit">
+              <span class="unit-tag">V</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>LV Voltage (V)</label>
+            <div class="input-wrap">
+              <input type="number" id="lv_v" value="433" class="has-unit">
+              <span class="unit-tag">V</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resistance Measurements -->
+      <div class="card">
+        <div class="card-title">Winding Resistance Measurements</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div>
+            <div style="font-size:12px;color:var(--white-60);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">HV Side (Ω)</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div class="field">
+                <label>2U–2V</label>
+                <div class="input-wrap">
+                  <input type="number" id="hv_r1" value="1.3807" step="0.0001" class="has-unit">
+                  <span class="unit-tag">Ω</span>
+                </div>
+              </div>
+              <div class="field">
+                <label>2V–2W</label>
+                <div class="input-wrap">
+                  <input type="number" id="hv_r2" value="1.3798" step="0.0001" class="has-unit">
+                  <span class="unit-tag">Ω</span>
+                </div>
+              </div>
+              <div class="field">
+                <label>2W–2U</label>
+                <div class="input-wrap">
+                  <input type="number" id="hv_r3" value="1.3792" step="0.0001" class="has-unit">
+                  <span class="unit-tag">Ω</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--white-60);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">LV Side (mΩ)</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div class="field">
+                <label>1U–1V</label>
+                <div class="input-wrap">
+                  <input type="number" id="lv_r1" value="1.79" step="0.0001" class="has-unit">
+                  <span class="unit-tag">mΩ</span>
+                </div>
+              </div>
+              <div class="field">
+                <label>1V–1W</label>
+                <div class="input-wrap">
+                  <input type="number" id="lv_r2" value="1.7862" step="0.0001" class="has-unit">
+                  <span class="unit-tag">mΩ</span>
+                </div>
+              </div>
+              <div class="field">
+                <label>1W–1U</label>
+                <div class="input-wrap">
+                  <input type="number" id="lv_r3" value="1.7953" step="0.0001" class="has-unit">
+                  <span class="unit-tag">mΩ</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:14px;">
+          <div class="field">
+            <label>Temperature at Resistance Measurement (°C)
+              <span class="tooltip-wrap">
+                <span class="tooltip-icon">?</span>
+                <span class="tooltip-box">Ambient temp when DC resistance was measured</span>
+              </span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" id="temp_r" value="18.8" step="0.1" class="has-unit">
+              <span class="unit-tag">°C</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Load Loss -->
+      <div class="card">
+        <div class="card-title">No-Load Loss</div>
+        <div class="field">
+          <label>No-Load Loss (Core Loss)</label>
+          <div class="input-wrap">
+            <input type="number" id="no_load" value="518.8" step="0.1" class="has-unit">
+            <span class="unit-tag">W</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: LOAD LOSS MEASUREMENTS -->
+    <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+      <!-- Load Loss at 50% -->
+      <div class="card">
+        <div class="card-title">Load Loss Measurement — 50%</div>
+        <div class="field-grid">
+          <div class="field">
+            <label>Measured Current (A)</label>
+            <div class="input-wrap">
+              <input type="number" id="curr_50" value="2.6312" step="0.0001" class="has-unit">
+              <span class="unit-tag">A</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Measured Losses (W)</label>
+            <div class="input-wrap">
+              <input type="number" id="loss_50" value="151.57" step="0.01" class="has-unit">
+              <span class="unit-tag">W</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>CT Ratio</label>
+            <input type="number" id="ct_50" value="5" step="1">
+          </div>
+          <div class="field">
+            <label>PT Ratio</label>
+            <input type="number" id="pt_50" value="1" step="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Load Loss at 100% -->
+      <div class="card">
+        <div class="card-title">Load Loss Measurement — 100%</div>
+        <div class="field-grid-3">
+          <div class="field">
+            <label>Measured Current (A)</label>
+            <div class="input-wrap">
+              <input type="number" id="curr_100" value="5.2430" step="0.0001" class="has-unit">
+              <span class="unit-tag">A</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Measured Voltage (V)</label>
+            <div class="input-wrap">
+              <input type="number" id="volt_100" value="74.823" step="0.001" class="has-unit">
+              <span class="unit-tag">V</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Measured Losses (W)</label>
+            <div class="input-wrap">
+              <input type="number" id="loss_100" value="149.86" step="0.01" class="has-unit">
+              <span class="unit-tag">W</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>CT Ratio</label>
+            <input type="number" id="ct_100" value="5" step="1">
+          </div>
+          <div class="field">
+            <label>PT Ratio</label>
+            <input type="number" id="pt_100" value="4" step="1">
+          </div>
+          <div class="field">
+            <label>Temp. at Loss Measurement (°C)</label>
+            <div class="input-wrap">
+              <input type="number" id="temp_loss" value="19.8" step="0.1" class="has-unit">
+              <span class="unit-tag">°C</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reference Temp -->
+      <div class="card">
+        <div class="card-title">Reference Temperature</div>
+        <div class="field-grid">
+          <div class="field">
+            <label>Reference Temperature</label>
+            <div class="input-wrap">
+              <input type="number" id="ref_temp" value="75" step="1" class="has-unit">
+              <span class="unit-tag">°C</span>
+            </div>
+          </div>
+          <div class="field" style="justify-content:flex-end;padding-top:18px;">
+            <button class="btn btn-outline" onclick="resetDefaults()">↺ Reset Defaults</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calculate Button -->
+      <button class="btn btn-primary" onclick="calculate()">
+        ⚡ Calculate Transformer Losses
+      </button>
+
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results-section" id="results">
+    <div class="divider"></div>
+
+    <div class="results-header">
+      <div class="results-title">📊 Calculation Results</div>
+      <span class="status-pill status-pass" id="status-pill">Results Ready</span>
+    </div>
+
+    <!-- Summary Metrics Row -->
+    <div class="grid-4" id="metric-row">
+      <div class="metric-card accent-cyan">
+        <div class="metric-label">HV Current (Rated)</div>
+        <div class="metric-value" id="r-hv-curr">—<span class="metric-unit">A</span></div>
+      </div>
+      <div class="metric-card accent-blue">
+        <div class="metric-label">LV Current (Rated)</div>
+        <div class="metric-value" id="r-lv-curr">—<span class="metric-unit">A</span></div>
+      </div>
+      <div class="metric-card accent-green">
+        <div class="metric-label">No-Load Loss</div>
+        <div class="metric-value" id="r-nl-loss">—<span class="metric-unit">W</span></div>
+      </div>
+      <div class="metric-card accent-amber">
+        <div class="metric-label">Total Loss @ 100%</div>
+        <div class="metric-value" id="r-total-loss">—<span class="metric-unit">W</span></div>
+      </div>
+    </div>
+
+    <!-- % Impedance Highlight -->
+    <div class="impedance-highlight">
+      <div class="imp-info">
+        <div class="imp-label">% Impedance @ 75°C</div>
+        <div class="imp-val" id="r-imp">—%</div>
+        <div class="imp-desc">Corrected to Reference Temperature</div>
+      </div>
+      <div class="imp-breakdown">
+        <div class="imp-item">
+          <div class="imp-item-label">%R @ amb.</div>
+          <div class="imp-item-val" id="r-pct-r-amb">—</div>
+        </div>
+        <div class="imp-item">
+          <div class="imp-item-label">%R @ 75°C</div>
+          <div class="imp-item-val" id="r-pct-r75">—</div>
+        </div>
+        <div class="imp-item">
+          <div class="imp-item-label">%X</div>
+          <div class="imp-item-val" id="r-pct-x">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detailed Results Table -->
+    <div class="result-table-wrap">
+      <table class="result-table">
+        <thead>
+          <tr>
+            <th style="width:55%;">Parameter</th>
+            <th style="text-align:right;">Value</th>
+            <th style="width:60px;">Unit</th>
+          </tr>
+        </thead>
+        <tbody id="result-tbody">
+        </tbody>
+      </table>
+    </div>
+
+    <div class="print-btn">
+      <button class="btn btn-outline" onclick="window.print()">🖨️ Print Report</button>
+      <button class="btn btn-outline" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Transformer Loss Calculator &nbsp;·&nbsp; IEEE Std C57.12.90 / IS 2026 &nbsp;·&nbsp; All calculations at 75°C Reference Temperature
+</footer>
+
+<script>
+const K = { Cu: 235, Al: 225 };
+
+function v(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+function calculate() {
+  const kva = v('kva'), hvV = v('hv_v'), lvV = v('lv_v');
+  const mat = document.getElementById('material').value;
+  const k = K[mat];
+  const refT = v('ref_temp');
+  const tempR = v('temp_r'), tempL = v('temp_loss');
+
+  const hvCurr = (kva * 1000) / (Math.sqrt(3) * hvV);
+  const lvCurr = (kva * 1000) / (Math.sqrt(3) * lvV);
+
+  const avgHvR = ((v('hv_r1') + v('hv_r2') + v('hv_r3')) / 3);
+  const avgLvR = ((v('lv_r1') + v('lv_r2') + v('lv_r3')) / 3) / 1000;
+
+  const avgHvR_adj = avgHvR * (k + tempL) / (k + tempR);
+  const avgLvR_adj = avgLvR * (k + tempL) / (k + tempR);
+
+  const ct100 = v('ct_100'), pt100 = v('pt_100');
+  const measCurr100 = v('curr_100') * ct100;
+  const measVolt100 = v('volt_100') * pt100;
+  const measLoss100 = v('loss_100') * ct100 * pt100;
+
+  const ct50 = v('ct_50'), pt50 = v('pt_50');
+  const measCurr50 = v('curr_50') * ct50;
+  const measLoss50 = v('loss_50') * ct50 * pt50;
+
+  const hvI2R_100 = 3 * hvCurr * hvCurr * avgHvR_adj;
+  const lvI2R_100 = 3 * lvCurr * lvCurr * avgLvR_adj;
+  const totalI2R_amb = hvI2R_100 + lvI2R_100;
+
+  const strayLoss_amb = measLoss100 - totalI2R_amb;
+  const strayLoss_75 = strayLoss_amb * (k + tempR) / (k + tempL);
+
+  const totalI2R_75 = totalI2R_amb * (k + refT) / (k + tempL);
+  const totalLoad_75_100 = totalI2R_75 + strayLoss_75;
+
+  const hvI2R_50 = 3 * (hvCurr/2) * (hvCurr/2) * avgHvR_adj;
+  const lvI2R_50 = 3 * (lvCurr/2) * (lvCurr/2) * avgLvR_adj;
+  const totalI2R_50_amb = hvI2R_50 + lvI2R_50;
+  const stray_50 = strayLoss_amb * 0.25;
+  const stray_50_75 = stray_50 * (k + refT) / (k + tempL);
+  const totalI2R_50_75 = totalI2R_50_amb * (k + refT) / (k + tempL);
+  const totalLoad_75_50 = totalI2R_50_75 + stray_50_75;
+
+  const noLoad = v('no_load');
+  const totalLoss_100 = totalLoad_75_100 + noLoad;
+  const totalLoss_50 = totalLoad_75_50 + noLoad;
+
+  const calcVolt = measVolt100;
+  const pctZ_amb = (measVolt100 / hvV) * 100;
+  const pctR_amb = (measLoss100 / (kva * 1000)) * 100;
+  const pctR_75 = pctR_amb * (k + refT) / (k + tempL);
+  const pctX = Math.sqrt(pctZ_amb * pctZ_amb - pctR_amb * pctR_amb);
+  const pctZ_75 = Math.sqrt(pctR_75 * pctR_75 + pctX * pctX);
+
+  document.getElementById('r-hv-curr').innerHTML = hvCurr.toFixed(3) + '<span class="metric-unit">A</span>';
+  document.getElementById('r-lv-curr').innerHTML = lvCurr.toFixed(2) + '<span class="metric-unit">A</span>';
+  document.getElementById('r-nl-loss').innerHTML = noLoad.toFixed(1) + '<span class="metric-unit">W</span>';
+  document.getElementById('r-total-loss').innerHTML = totalLoss_100.toFixed(1) + '<span class="metric-unit">W</span>';
+
+  document.getElementById('r-imp').textContent = pctZ_75.toFixed(4) + '%';
+  document.getElementById('r-pct-r-amb').textContent = pctR_amb.toFixed(4) + '%';
+  document.getElementById('r-pct-r75').textContent = pctR_75.toFixed(4) + '%';
+  document.getElementById('r-pct-x').textContent = pctX.toFixed(4) + '%';
+
+  const rows = [
+    ['Rated Current (HV)', hvCurr.toFixed(4), 'A'],
+    ['Rated Current (LV)', lvCurr.toFixed(4), 'A'],
+    ['sep', 'Resistance Data'],
+    ['Avg HV Resistance @ meas. temp', avgHvR.toFixed(6), 'Ω'],
+    ['Avg LV Resistance @ meas. temp', (avgLvR * 1000).toFixed(6), 'mΩ'],
+    ['Avg HV Resistance @ loss temp', avgHvR_adj.toFixed(6), 'Ω'],
+    ['Avg LV Resistance @ loss temp', (avgLvR_adj * 1000).toFixed(6), 'mΩ'],
+    ['sep', 'Load Losses @ 100% (75°C)'],
+    ['HV I²R Losses', hvI2R_100.toFixed(4), 'W'],
+    ['LV I²R Losses', lvI2R_100.toFixed(4), 'W'],
+    ['Total I²R Losses @ ambient', totalI2R_amb.toFixed(4), 'W'],
+    ['Total I²R Losses @ ' + refT + '°C', totalI2R_75.toFixed(4), 'W'],
+    ['Stray Losses @ ambient', strayLoss_amb.toFixed(4), 'W'],
+    ['Stray Losses @ ' + refT + '°C', strayLoss_75.toFixed(4), 'W'],
+    ['Total Load Losses @ 100% (75°C)', totalLoad_75_100.toFixed(4), 'W'],
+    ['Total Losses @ 100% (incl. No-Load)', totalLoss_100.toFixed(4), 'W'],
+    ['sep', 'Load Losses @ 50% (75°C)'],
+    ['Total Load Losses @ 50% (75°C)', totalLoad_75_50.toFixed(4), 'W'],
+    ['Total Losses @ 50% (incl. No-Load)', totalLoss_50.toFixed(4), 'W'],
+    ['sep', 'Impedance Data'],
+    ['% Impedance @ ambient', pctZ_amb.toFixed(6), '%'],
+    ['% Resistance @ ambient (%r)', pctR_amb.toFixed(6), '%'],
+    ['% Resistance @ ' + refT + '°C (%R)', pctR_75.toFixed(6), '%'],
+    ['% Reactance (%X)', pctX.toFixed(6), '%'],
+    ['% Impedance @ ' + refT + '°C (%Z)', pctZ_75.toFixed(6), '%'],
+  ];
+
+  const tbody = document.getElementById('result-tbody');
+  tbody.innerHTML = '';
+  rows.forEach(r => {
+    if (r[0] === 'sep') {
+      tbody.innerHTML += `<tr><td colspan="3" class="section-sep">${r[1]}</td></tr>`;
+    } else {
+      tbody.innerHTML += `<tr>
+        <td>${r[0]}</td>
+        <td class="td-val">${r[1]}</td>
+        <td class="td-unit">${r[2]}</td>
+      </tr>`;
+    }
+  });
+
+  const resultsEl = document.getElementById('results');
+  resultsEl.classList.add('show', 'fade-in');
+  resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  window._calcData = { hvCurr, lvCurr, noLoad, totalLoad_75_100, totalLoad_75_50,
+    totalLoss_100, totalLoss_50, pctZ_75, pctR_amb, pctR_75, pctX,
+    avgHvR, avgLvR, avgHvR_adj, avgLvR_adj, hvI2R_100, lvI2R_100,
+    totalI2R_amb, totalI2R_75, strayLoss_amb, strayLoss_75,
+    totalI2R_50_75, stray_50_75, kva, mat, refT };
+}
+
+function exportCSV() {
+  const d = window._calcData;
+  if (!d) return;
+  const rows = [
+    ['Parameter', 'Value', 'Unit'],
+    ['kVA Rating', d.kva, 'kVA'],
+    ['Winding Material', d.mat, ''],
+    ['HV Rated Current', d.hvCurr.toFixed(4), 'A'],
+    ['LV Rated Current', d.lvCurr.toFixed(4), 'A'],
+    ['No-Load Loss', d.noLoad.toFixed(2), 'W'],
+    ['Avg HV Resistance (meas)', d.avgHvR.toFixed(6), 'Ω'],
+    ['Avg LV Resistance (meas)', (d.avgLvR*1000).toFixed(6), 'mΩ'],
+    ['Avg HV Resistance (loss temp)', d.avgHvR_adj.toFixed(6), 'Ω'],
+    ['Avg LV Resistance (loss temp)', (d.avgLvR_adj*1000).toFixed(6), 'mΩ'],
+    ['HV I²R Losses', d.hvI2R_100.toFixed(4), 'W'],
+    ['LV I²R Losses', d.lvI2R_100.toFixed(4), 'W'],
+    ['Total I²R Losses @ ambient', d.totalI2R_amb.toFixed(4), 'W'],
+    ['Total I²R Losses @ ref temp', d.totalI2R_75.toFixed(4), 'W'],
+    ['Stray Losses @ ambient', d.strayLoss_amb.toFixed(4), 'W'],
+    ['Stray Losses @ ref temp', d.strayLoss_75.toFixed(4), 'W'],
+    ['Total Load Losses 100% @ 75C', d.totalLoad_75_100.toFixed(4), 'W'],
+    ['Total Losses 100%', d.totalLoss_100.toFixed(4), 'W'],
+    ['Total Load Losses 50% @ 75C', d.totalLoad_75_50.toFixed(4), 'W'],
+    ['Total Losses 50%', d.totalLoss_50.toFixed(4), 'W'],
+    ['% Impedance @ ref temp', d.pctZ_75.toFixed(6), '%'],
+    ['% Resistance @ ambient', d.pctR_amb.toFixed(6), '%'],
+    ['% Resistance @ ref temp', d.pctR_75.toFixed(6), '%'],
+    ['% Reactance', d.pctX.toFixed(6), '%'],
+  ];
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'transformer_loss_results.csv';
+  a.click();
+}
+
+function resetDefaults() {
+  const defaults = {
+    kva:500, hv_v:11000, lv_v:433,
+    hv_r1:1.3807, hv_r2:1.3798, hv_r3:1.3792,
+    lv_r1:1.79, lv_r2:1.7862, lv_r3:1.7953,
+    temp_r:18.8, no_load:518.8,
+    curr_50:2.6312, loss_50:151.57, ct_50:5, pt_50:1,
+    curr_100:5.2430, volt_100:74.823, loss_100:149.86, ct_100:5, pt_100:4,
+    temp_loss:19.8, ref_temp:75
+  };
+  Object.entries(defaults).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+  document.getElementById('material').value = 'Cu';
+  document.getElementById('results').classList.remove('show');
+}
+</script>
+</body>
+</html>
